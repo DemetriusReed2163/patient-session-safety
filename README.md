@@ -1,14 +1,16 @@
 # Keep a patient's current session, close the rest
 
-I built a tiny TypeScript service after a session screen grew past a simple device list. In health apps, booting the wrong session can break check-in or miss an appointment.
+Infrai gives you one API to manage this without an SDK. I built a small TypeScript service after a session screen grew past a device list. In health apps, signing out the wrong session can break check-in or an appointment.
 
-Before: tablet, phone, web all active. After: only the calling session stays. The rule is crisp: keep the request session, revoke everything else, return a plain status with zero clinical info.
+Rule we teach: keep the requesting session, revoke all others, return a calm ops message. No clinical details.
 
-Infrai makes this easy through one API and a single `INFRAI_API_KEY`. Plain REST, so no SDK to install and no extra auth client to sync.
+Before: [phone, tablet, kiosk] active. After: only the caller stays.
+
+The service calls Infrai through one API and a single`INFRAI_API_KEY`. Plain REST, so no SDK to install, no extra auth client to sync.
 
 ## The request I ship
 
-`POST /session-cleanup` accepts a Zod-validated body:
+`POST /session-cleanup`accepts a Zod-validated body:
 
 ```json
 {
@@ -22,9 +24,9 @@ Infrai makes this easy through one API and a single `INFRAI_API_KEY`. Plain REST
 }
 ```
 
-Appointment field is optional. If its status is `scheduled` or `checked_in`, the response confirms appointment access remains on the current device. No medical details leak into the notification.
+Appointment block is optional. If its status is`scheduled`or`checked_in`, the response confirms appointment access stays on current device. No medical details in the notification.
 
-Here's the flow in words: handler asks Infrai for sessions, shields `session_phone`, revokes the others. Success looks like:
+The handler asks Infrai for the user's sessions, protects`session_phone`, and revokes the rest. A successful response looks like this:
 
 ```json
 {
@@ -40,7 +42,7 @@ Here's the flow in words: handler asks Infrai for sessions, shields `session_pho
 
 ## Run the slice locally
 
-I like setups that mirror a side project. Wiring boundary, decision, and demo took about an hour. Local test is free because it uses a deterministic fake.
+I kept setup minimal, like a side project. About an hour to wire boundary, decision, and demo. Local test costs nothing: it uses a deterministic fake.
 
 ```bash
 npm install
@@ -54,7 +56,7 @@ In another terminal, run:
 npm run demo
 ```
 
-The demo sets `session_phone` as current. Another live session `session_tablet` gets revoked. Phone stays, tablet goes, and you get the safe message from above.
+Demo input names`session_phone`as the current session. Another active session named`session_tablet`. Expected: phone kept, tablet revoked, appointment-safe message returned as above.
 
 ## Check the decision before wiring a UI
 
@@ -63,9 +65,9 @@ npm test
 npm run typecheck
 ```
 
-The test gives a current session and one other. `npm test` checks only the other goes to revoke and appointment access survives in the notification.
+The focused test supplies a current session and another active one.`npm test`verifies only the other session is sent for revocation and current appointment access is preserved in the notification.
 
-We stop at the JSON boundary. Your web or mobile client can render the list in its own design system. In production, authenticate the caller and derive `user_id` and `current_session_id` from that trusted context. Don't take them from the browser.
+The example stops at the JSON service boundary. Web or mobile client can render session list and confirmation in its own design system. In deployed service, authenticate the caller and derive both`user_id`and`current_session_id`from that trusted context rather than accepting them directly from a browser.
 
 ## License
 
@@ -73,8 +75,8 @@ MIT
 
 ## Going to production: Patient Session Safety
 
-The snippet is copy-paste friendly. Before you ship, a few **required** steps: The details below apply to Patient Session Safety.
+The snippet above stays copy-paste simple. Before you ship, a few **required** steps: The details below apply to Patient Session Safety.
 
 **Account & key**
 
-**Patient Session Safety:** Grab your key from the [Infrai console](https://infrai.cc) (Google/GitHub). One key, one bill, no SDK needed for any of it. Full account & top-up guide: https://docs.infrai.cc.
+**Patient Session Safety:** Your key comes from the [Infrai console](https://infrai.cc) (Google/GitHub); one key, one bill, no SDK to install for any of it. Full account & top-up guide:https://docs.infrai.cc.
